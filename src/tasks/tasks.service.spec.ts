@@ -5,6 +5,7 @@ import { TasksService } from './tasks.service';
 const mockPrismaService = () => ({
   task: {
     create: jest.fn(),
+    findMany: jest.fn(),
   },
 });
 
@@ -25,6 +26,25 @@ describe('TasksService', () => {
 
     service = module.get<TasksService>(TasksService);
     prismaService = module.get<PrismaService>(PrismaService);
+  });
+
+  describe('getTasks', () => {
+    it('should be able to return the tasks', async () => {
+      const mockTask = {
+        title: 'Task title',
+        summary: 'Task summary',
+        id: 'someId2',
+        userId: 'someId',
+        performedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      jest.spyOn(prismaService.task, 'findMany').mockResolvedValue([mockTask]);
+
+      const result = await service.getTasks();
+      expect(result).toEqual([mockTask]);
+    });
   });
 
   describe('createTask', () => {

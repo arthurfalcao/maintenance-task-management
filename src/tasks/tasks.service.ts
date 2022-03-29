@@ -6,6 +6,10 @@ import { CreateTaskDto } from './dto/create-task.dto';
 export class TasksService {
   constructor(private prismaService: PrismaService) {}
 
+  async getTasks() {
+    return this.prismaService.task.findMany();
+  }
+
   async createTask(createTaskDto: CreateTaskDto, userId: string) {
     return this.prismaService.task.create({
       data: {
