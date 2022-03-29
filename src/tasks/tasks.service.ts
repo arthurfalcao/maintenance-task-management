@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 
@@ -17,5 +18,20 @@ export class TasksService {
         userId,
       },
     });
+  }
+
+  async deleteTask(id: string) {
+    try {
+      await this.prismaService.task.delete({
+        where: { id },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === 'P2025') {
+          throw new NotFoundException(`Task "${id}" not found`);
+        }
+      }
+      throw err;
+    }
   }
 }
