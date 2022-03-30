@@ -61,7 +61,7 @@ describe('TasksService', () => {
       jest.spyOn(prismaService.task, 'create').mockResolvedValue({
         ...task,
         id: 'someId2',
-        userId: 'someId',
+        userId: 'userId',
         performedAt: null,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -71,7 +71,56 @@ describe('TasksService', () => {
       expect(result.title).toEqual(task.title);
       expect(result.summary).toEqual(task.summary);
       expect(result.performedAt).toBeNull();
-      expect(result.userId).toBe('someId');
+      expect(result.userId).toBe('userId');
+    });
+  });
+
+  describe('updateTask', () => {
+    it('should be able to update a task', async () => {
+      const task = {
+        id: 'someId',
+        title: 'Task title',
+        summary: 'Task summary',
+        userId: 'userId',
+        performedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const updatedTask = {
+        title: 'Task',
+      };
+
+      jest.spyOn(prismaService.task, 'update').mockResolvedValue({
+        ...task,
+        ...updatedTask,
+      });
+
+      const result = await service.updateTask('someId', updatedTask);
+      expect(result.title).toEqual(updatedTask.title);
+      expect(result.createdAt).toBe(task.createdAt);
+    });
+
+    it('should throw a not found error if the task is not found', async () => {
+      jest
+        .spyOn(prismaService.task, 'update')
+        .mockRejectedValue(
+          new Prisma.PrismaClientKnownRequestError(
+            'message',
+            'P2025',
+            'clientVersion',
+          ),
+        );
+
+      await expect(service.updateTask('someId', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw an error if the task does not exist', async () => {
+      jest.spyOn(prismaService.task, 'update').mockRejectedValue(new Error());
+
+      await expect(service.updateTask('someId', {})).rejects.toThrowError();
     });
   });
 
@@ -94,7 +143,7 @@ describe('TasksService', () => {
       expect(mockDeleteTask).toHaveBeenCalled();
     });
 
-    it('should throw an error if the task does not exist', async () => {
+    it('should throw a not found error if the task does not exist', async () => {
       jest
         .spyOn(prismaService.task, 'delete')
         .mockRejectedValue(
@@ -108,6 +157,12 @@ describe('TasksService', () => {
       await expect(service.deleteTask('someId')).rejects.toThrowError(
         NotFoundException,
       );
+    });
+
+    it('should throw an error if the task does not exist', async () => {
+      jest.spyOn(prismaService.task, 'delete').mockRejectedValue(new Error());
+
+      await expect(service.deleteTask('someId')).rejects.toThrowError();
     });
   });
 });
