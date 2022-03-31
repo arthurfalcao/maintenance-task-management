@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, Role, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
@@ -56,5 +60,28 @@ export class TasksService {
       }
       throw err;
     }
+  }
+
+  async performTask(id: string) {
+    const task = await this.prismaService.task.findUnique({
+      where: { id },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task "${id}" not found`);
+    }
+
+    if (task.performedAt) {
+      throw new BadRequestException(`Task "${id}" already performed`);
+    }
+
+    const updatedTask = await this.prismaService.task.update({
+      where: { id },
+      data: { performedAt: new Date() },
+    });
+
+    // TODO: notify managers
+
+    return updatedTask;
   }
 }

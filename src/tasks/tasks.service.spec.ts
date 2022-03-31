@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +7,7 @@ import { TasksService } from './tasks.service';
 const mockPrismaService = () => ({
   task: {
     create: jest.fn(),
+    findUnique: jest.fn(),
     findMany: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
@@ -16,6 +17,16 @@ const mockPrismaService = () => ({
 describe('TasksService', () => {
   let service: TasksService;
   let prismaService: PrismaService;
+
+  const mockTask = {
+    id: 'someId',
+    title: 'Task title',
+    summary: 'Task summary',
+    userId: 'userId',
+    performedAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,16 +45,6 @@ describe('TasksService', () => {
 
   describe('getTasks', () => {
     it('calls PrismaService.task.findMany with userId when user is TECHNICIAN', async () => {
-      const mockTask = {
-        title: 'Task title',
-        summary: 'Task summary',
-        id: 'someId2',
-        userId: 'someId',
-        performedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       const mockUser = {
         id: 'someId',
         email: 'email',
@@ -66,16 +67,6 @@ describe('TasksService', () => {
     });
 
     it('calls PrismaService.task.findMany without userId when user is MANAGER', async () => {
-      const mockTask = {
-        title: 'Task title',
-        summary: 'Task summary',
-        id: 'someId2',
-        userId: 'someId2',
-        performedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       const mockUser = {
         id: 'someId',
         email: 'email',
@@ -124,28 +115,18 @@ describe('TasksService', () => {
 
   describe('updateTask', () => {
     it('should be able to update a task', async () => {
-      const task = {
-        id: 'someId',
-        title: 'Task title',
-        summary: 'Task summary',
-        userId: 'userId',
-        performedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       const updatedTask = {
         title: 'Task',
       };
 
       jest.spyOn(prismaService.task, 'update').mockResolvedValue({
-        ...task,
+        ...mockTask,
         ...updatedTask,
       });
 
       const result = await service.updateTask('someId', updatedTask);
       expect(result.title).toEqual(updatedTask.title);
-      expect(result.createdAt).toBe(task.createdAt);
+      expect(result.createdAt).toBe(mockTask.createdAt);
     });
 
     it('should throw a not found error if the task is not found', async () => {
@@ -210,6 +191,44 @@ describe('TasksService', () => {
       jest.spyOn(prismaService.task, 'delete').mockRejectedValue(new Error());
 
       await expect(service.deleteTask('someId')).rejects.toThrowError();
+    });
+  });
+
+  describe('performTask', () => {
+    it('should be able to perform a task', async () => {
+      const performedAt = new Date();
+
+      jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(mockTask);
+
+      const mockPerformTask = jest
+        .spyOn(prismaService.task, 'update')
+        .mockResolvedValue({
+          ...mockTask,
+          performedAt,
+        });
+
+      const result = await service.performTask('someId');
+
+      expect(mockPerformTask).toHaveBeenCalled();
+      expect(result.performedAt).toEqual(performedAt);
+    });
+
+    it('should throw a not found error if the task does not exist', async () => {
+      jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(null);
+
+      await expect(service.performTask('someId')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw an error if the task is already performed', async () => {
+      jest
+        .spyOn(prismaService.task, 'findUnique')
+        .mockResolvedValue({ ...mockTask, performedAt: new Date() });
+
+      await expect(service.performTask('someId')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });
