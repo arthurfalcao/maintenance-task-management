@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -8,8 +8,12 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 export class TasksService {
   constructor(private prismaService: PrismaService) {}
 
-  async getTasks() {
-    return this.prismaService.task.findMany();
+  async getTasks(user: User) {
+    return this.prismaService.task.findMany({
+      where: {
+        userId: user.role === Role.TECHNICIAN ? user.id : undefined,
+      },
+    });
   }
 
   async createTask(createTaskDto: CreateTaskDto, userId: string) {

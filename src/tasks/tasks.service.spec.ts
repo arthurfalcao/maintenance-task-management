@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { TasksService } from './tasks.service';
 
@@ -33,7 +33,7 @@ describe('TasksService', () => {
   });
 
   describe('getTasks', () => {
-    it('should be able to return the tasks', async () => {
+    it('calls PrismaService.task.findMany with userId when user is TECHNICIAN', async () => {
       const mockTask = {
         title: 'Task title',
         summary: 'Task summary',
@@ -44,10 +44,57 @@ describe('TasksService', () => {
         updatedAt: new Date(),
       };
 
-      jest.spyOn(prismaService.task, 'findMany').mockResolvedValue([mockTask]);
+      const mockUser = {
+        id: 'someId',
+        email: 'email',
+        role: Role.TECHNICIAN,
+        password: 'password',
+        name: 'name',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-      const result = await service.getTasks();
+      const mockFindMany = jest
+        .spyOn(prismaService.task, 'findMany')
+        .mockResolvedValue([mockTask]);
+
+      const result = await service.getTasks(mockUser);
       expect(result).toEqual([mockTask]);
+      expect(mockFindMany).toHaveBeenCalledWith({
+        where: { userId: 'someId' },
+      });
+    });
+
+    it('calls PrismaService.task.findMany without userId when user is MANAGER', async () => {
+      const mockTask = {
+        title: 'Task title',
+        summary: 'Task summary',
+        id: 'someId2',
+        userId: 'someId2',
+        performedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockUser = {
+        id: 'someId',
+        email: 'email',
+        role: Role.MANAGER,
+        password: 'password',
+        name: 'name',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockFindMany = jest
+        .spyOn(prismaService.task, 'findMany')
+        .mockResolvedValue([mockTask]);
+
+      const result = await service.getTasks(mockUser);
+      expect(result).toEqual([mockTask]);
+      expect(mockFindMany).toHaveBeenCalledWith({
+        where: { userId: undefined },
+      });
     });
   });
 
