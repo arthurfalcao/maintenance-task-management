@@ -41,8 +41,9 @@ export class TasksController {
   updateTask(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateTaskDto: UpdateTaskDto,
+    @GetUser() user: User,
   ) {
-    return this.tasksService.updateTask(id, updateTaskDto);
+    return this.tasksService.updateTask(id, updateTaskDto, user);
   }
 
   @HttpCode(204)
