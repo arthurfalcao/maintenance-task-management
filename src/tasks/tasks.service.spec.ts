@@ -277,8 +277,13 @@ describe('TasksService', () => {
 
   describe('notifyToManagers', () => {
     it('should be able to perform a task', async () => {
+      jest
+        .spyOn(prismaService.user, 'findMany')
+        .mockResolvedValue([getUser(Role.MANAGER)]);
       const mockClient = jest.spyOn(client, 'emit');
+
       await service.notifyToManagers(mockTask);
+
       expect(mockClient).toHaveBeenCalled();
     });
   });

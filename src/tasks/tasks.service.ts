@@ -87,7 +87,7 @@ export class TasksService {
       data: { performedAt: new Date() },
     });
 
-    this.notifyToManagers(updatedTask);
+    await this.notifyToManagers(updatedTask);
 
     return updatedTask;
   }
