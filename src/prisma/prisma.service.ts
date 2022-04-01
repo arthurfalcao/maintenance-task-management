@@ -7,7 +7,7 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    super({ log: ['query', 'info', 'warn', 'error'] });
+    super({ log: ['info', 'warn', 'error'] });
   }
 
   async onModuleInit() {
@@ -17,10 +17,4 @@ export class PrismaService
   async onModuleDestroy() {
     await this.$disconnect();
   }
-
-  // async enableShutdownHooks(app: INestApplication) {
-  //   this.$on('beforeExit', async () => {
-  //     await app.close();
-  //   });
-  // }
 }
