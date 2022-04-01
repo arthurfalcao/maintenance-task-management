@@ -1,16 +1,24 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Role, User } from '@prisma/client';
+import { ClientProxy } from '@nestjs/microservices';
+import { Prisma, Role, Task, User } from '@prisma/client';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { NOTIFICATION_SERVICE } from './constants';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TasksService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    @Inject(NOTIFICATION_SERVICE)
+    private client: ClientProxy,
+  ) {}
 
   async getTasks(user: User) {
     return this.prismaService.task.findMany({
@@ -67,11 +75,11 @@ export class TasksService {
     });
 
     if (!task) {
-      throw new NotFoundException(`Task "${id}" not found`);
+      throw new NotFoundException(`Task '${id}' not found`);
     }
 
     if (task.performedAt) {
-      throw new BadRequestException(`Task "${id}" already performed`);
+      throw new BadRequestException(`Task '${id}' already performed`);
     }
 
     const updatedTask = await this.prismaService.task.update({
@@ -79,8 +87,19 @@ export class TasksService {
       data: { performedAt: new Date() },
     });
 
-    // TODO: notify managers
+    this.notifyToManagers(updatedTask);
 
     return updatedTask;
+  }
+
+  async notifyToManagers(task: Task) {
+    const managers = await this.prismaService.user.findMany({
+      where: { role: Role.MANAGER },
+    });
+
+    return this.client.emit('performs', {
+      task,
+      managers: managers.map((m) => m.email),
+    });
   }
 }

@@ -1,7 +1,9 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NOTIFICATION_SERVICE } from './constants';
 import { TasksService } from './tasks.service';
 
 const mockPrismaService = () => ({
@@ -12,11 +14,19 @@ const mockPrismaService = () => ({
     update: jest.fn(),
     delete: jest.fn(),
   },
+  user: {
+    findMany: jest.fn(() => []),
+  },
+});
+
+const mockClient = () => ({
+  emit: jest.fn(),
 });
 
 describe('TasksService', () => {
   let service: TasksService;
   let prismaService: PrismaService;
+  let client: ClientProxy;
 
   const mockTask = {
     id: 'someId',
@@ -46,11 +56,16 @@ describe('TasksService', () => {
           provide: PrismaService,
           useFactory: mockPrismaService,
         },
+        {
+          provide: NOTIFICATION_SERVICE,
+          useFactory: mockClient,
+        },
       ],
     }).compile();
 
     service = module.get<TasksService>(TasksService);
     prismaService = module.get<PrismaService>(PrismaService);
+    client = module.get<ClientProxy>(NOTIFICATION_SERVICE);
   });
 
   describe('getTasks', () => {
@@ -257,6 +272,14 @@ describe('TasksService', () => {
       await expect(service.performTask('someId')).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('notifyToManagers', () => {
+    it('should be able to perform a task', async () => {
+      const mockClient = jest.spyOn(client, 'emit');
+      await service.notifyToManagers(mockTask);
+      expect(mockClient).toHaveBeenCalled();
     });
   });
 });
