@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  db_test:
+    image: mysql:5.7
+    restart: always
+    ports:
+      - 3307:3306
+    env_file:
+      - .env.test
+    environment:
+      MYSQL_ROOT_PASSWORD: tests
+      MYSQL_DATABASE: tests

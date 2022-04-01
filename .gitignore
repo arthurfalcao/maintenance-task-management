@@ -35,4 +35,4 @@ lerna-debug.log*
 
 .docker/dbdata/
 .docker/rabbitmq/
-.env
+.env.*.local
