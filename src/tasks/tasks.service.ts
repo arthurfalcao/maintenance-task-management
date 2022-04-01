@@ -29,22 +29,21 @@ export class TasksService {
     });
   }
 
-  async updateTask(id: string, updateTaskDto: UpdateTaskDto) {
-    try {
-      const updatedTask = await this.prismaService.task.update({
-        where: { id },
-        data: updateTaskDto,
-      });
+  async updateTask(id: string, updateTaskDto: UpdateTaskDto, user: User) {
+    const task = await this.prismaService.task.findUnique({
+      where: { id },
+    });
 
-      return updatedTask;
-    } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        if (err.code === 'P2025') {
-          throw new NotFoundException(`Task "${id}" not found`);
-        }
-      }
-      throw err;
+    if (!task || task.userId !== user.id) {
+      throw new NotFoundException(`Task '${id}' not found`);
     }
+
+    const updatedTask = await this.prismaService.task.update({
+      where: { id },
+      data: updateTaskDto,
+    });
+
+    return updatedTask;
   }
 
   async deleteTask(id: string) {
@@ -55,7 +54,7 @@ export class TasksService {
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError) {
         if (err.code === 'P2025') {
-          throw new NotFoundException(`Task "${id}" not found`);
+          throw new NotFoundException(`Task '${id}' not found`);
         }
       }
       throw err;

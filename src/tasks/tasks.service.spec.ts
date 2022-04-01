@@ -28,6 +28,16 @@ describe('TasksService', () => {
     updatedAt: new Date(),
   };
 
+  const getUser = (role: Role) => ({
+    id: 'userId',
+    email: 'email',
+    role: role,
+    password: 'password',
+    name: 'name',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -119,36 +129,54 @@ describe('TasksService', () => {
         title: 'Task',
       };
 
+      const mockUser = getUser(Role.TECHNICIAN);
+
+      jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(mockTask);
       jest.spyOn(prismaService.task, 'update').mockResolvedValue({
         ...mockTask,
         ...updatedTask,
       });
 
-      const result = await service.updateTask('someId', updatedTask);
+      const result = await service.updateTask('someId', updatedTask, mockUser);
       expect(result.title).toEqual(updatedTask.title);
       expect(result.createdAt).toBe(mockTask.createdAt);
     });
 
     it('should throw a not found error if the task is not found', async () => {
-      jest
-        .spyOn(prismaService.task, 'update')
-        .mockRejectedValue(
-          new Prisma.PrismaClientKnownRequestError(
-            'message',
-            'P2025',
-            'clientVersion',
-          ),
-        );
+      const mockUser = getUser(Role.TECHNICIAN);
 
-      await expect(service.updateTask('someId', {})).rejects.toThrow(
+      jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(null);
+      const mockUpdate = jest.spyOn(prismaService.task, 'update');
+
+      await expect(service.updateTask('someId', {}, mockUser)).rejects.toThrow(
         NotFoundException,
       );
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
 
     it('should throw an error if the task does not exist', async () => {
+      const mockUser = getUser(Role.TECHNICIAN);
+
+      jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(mockTask);
       jest.spyOn(prismaService.task, 'update').mockRejectedValue(new Error());
 
-      await expect(service.updateTask('someId', {})).rejects.toThrowError();
+      await expect(
+        service.updateTask('someId', {}, mockUser),
+      ).rejects.toThrowError();
+    });
+
+    it('should return an error when trying to update a task from another user', async () => {
+      const mockUser = getUser(Role.TECHNICIAN);
+
+      jest
+        .spyOn(prismaService.task, 'findUnique')
+        .mockResolvedValue({ ...mockTask, userId: 'otherId' });
+      const mockUpdate = jest.spyOn(prismaService.task, 'update');
+
+      await expect(service.updateTask('someId', {}, mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 
