@@ -10,7 +10,7 @@ describe('AuthController (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -21,8 +21,11 @@ describe('AuthController (e2e)', () => {
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
   });
 
-  afterEach(async () => {
-    await prismaService.user.deleteMany();
+  beforeEach(async () => {
+    const deleteTask = prismaService.task.deleteMany();
+    const deleteUser = prismaService.user.deleteMany();
+
+    await prismaService.$transaction([deleteTask, deleteUser]);
   });
 
   afterAll(async () => {
@@ -32,7 +35,7 @@ describe('AuthController (e2e)', () => {
   describe('/auth/login (POST)', () => {
     it('should return a token', async () => {
       await prismaService.user.create({
-        data: userStub(),
+        data: userStub({ email: 'johndoe@example.com' }),
       });
 
       return request(app.getHttpServer())
@@ -56,7 +59,7 @@ describe('AuthController (e2e)', () => {
 
     it('should return unauthorized when password is incorrect', async () => {
       await prismaService.user.create({
-        data: userStub(),
+        data: userStub({ email: 'johndoe@example.com' }),
       });
 
       return request(app.getHttpServer())
