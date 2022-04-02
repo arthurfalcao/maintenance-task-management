@@ -9,6 +9,17 @@
       "request": "attach",
       "name": "Attach to Node",
       "restart": true
-    }
+    },
+    {
+      "name": "Docker: Attach to Node",
+      "type": "node",
+      "request": "attach",
+      "address": "localhost",
+      "port": 9229,
+      "protocol": "inspector",
+      "restart": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "/home/node/app"
+    },
   ]
 }
