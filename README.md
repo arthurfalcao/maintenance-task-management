@@ -62,7 +62,7 @@ It can be changed in `prisma/seed.ts`
 $ npm run test
 
 # e2e tests
-$ npm run test:e2e
+$ npm run test:docker:up
 
 # test coverage
 $ npm run test:cov

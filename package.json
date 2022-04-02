@@ -16,14 +16,15 @@
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
+    "prisma:generate": "prisma generate",
     "seed": "prisma db seed",
-    "docker:up": "docker-compose -f ./docker-compose.test.yml up -d",
-    "docker:down": "docker-compose -f ./docker-compose.test.yml down",
+    "test:docker:up": "docker-compose -f ./docker-compose.test.yml up",
+    "test:docker:down": "docker-compose -f ./docker-compose.test.yml down",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "NODE_ENV=test npm run docker:up && dotenv -e .env.test -- prisma migrate deploy && jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

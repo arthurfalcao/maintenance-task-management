@@ -5,7 +5,6 @@ services:
     image: node:lts
     entrypoint: .docker/entrypoint.sh
     working_dir: /home/node/app
-    command: npm run start:debug
     user: node
     ports:
       - 3000:3000

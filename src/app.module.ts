@@ -6,13 +6,11 @@ import { PrismaModule } from './prisma/prisma.module';
 import { TasksModule } from './tasks/tasks.module';
 import { NotificationModule } from './notification/notification.module';
 
-const isTesting = process.env.NODE_ENV === 'test';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: isTesting ? '.env.test' : '.env',
       isGlobal: true,
+      ignoreEnvVars: true,
       expandVariables: true,
     }),
     PrismaModule,
