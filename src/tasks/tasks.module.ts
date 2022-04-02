@@ -15,7 +15,7 @@ import { TasksController } from './tasks.controller';
         useFactory: (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            url: configService.get('QUEUE_URL'),
+            urls: [configService.get<string>('QUEUE_URL')],
             queue: configService.get('QUEUE_NAME'),
             queueOptions: { durable: false },
           },
