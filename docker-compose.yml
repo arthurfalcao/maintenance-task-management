@@ -3,6 +3,7 @@ version: '3'
 services:
   app:
     image: node:lts
+    entrypoint: .docker/entrypoint.sh
     working_dir: /home/node/app
     command: npm run start:debug
     user: node
@@ -13,6 +14,7 @@ services:
       - .:/home/node/app
     depends_on:
       - db
+      - rabbitmq
 
   db:
     image: mysql:5.7
@@ -20,7 +22,7 @@ services:
     ports:
       - 3306:3306
     env_file:
-      - .env.development.local
+      - .env
     volumes:
       - ./.docker/dbdata:/var/lib/mysql
 
