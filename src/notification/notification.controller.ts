@@ -16,7 +16,7 @@ export class NotificationController {
     const { managers, task } = payload;
 
     managers.forEach(() => {
-      const date = new Date(task.performedAt).toLocaleString();
+      const date = new Date(task.performedAt!).toLocaleString();
 
       this.#logger.log(
         `The tech "${task.userId}" performed the task "${task.id}" on date ${date}`,

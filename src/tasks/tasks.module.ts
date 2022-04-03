@@ -11,10 +11,10 @@ import { TasksController } from './tasks.controller';
     ClientsModule.registerAsync([
       {
         name: NOTIFICATION_SERVICE,
-        useFactory: (configService: ConfigService) => ({
+        useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [configService.get<string>('QUEUE_URL')],
+            urls: [configService.get<string>('QUEUE_URL')!],
             queue: configService.get('QUEUE_NAME'),
             queueOptions: { durable: false },
           },

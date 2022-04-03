@@ -1,7 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { RmqOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 
@@ -15,11 +15,11 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
-  app.connectMicroservice<MicroserviceOptions>({
+  app.connectMicroservice<RmqOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: [configService.get<string>('QUEUE_URL')],
-      queue: configService.get('QUEUE_NAME'),
+      urls: [configService.get<string>('QUEUE_URL')!],
+      queue: configService.get<string>('QUEUE_NAME'),
       queueOptions: { durable: false },
     },
   });
