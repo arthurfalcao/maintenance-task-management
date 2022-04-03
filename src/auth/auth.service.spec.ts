@@ -4,18 +4,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
+import {
+  createMockPrismaService,
+  MockPrismaService,
+} from '../prisma/prisma.mock';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
 
-const mockPrismaService = () => ({
-  user: {
-    findUnique: jest.fn(),
-  },
-});
-
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: PrismaService;
+  let prismaService: MockPrismaService;
   let jwtService: JwtService;
 
   const getUser = async (role: Role) => {
@@ -41,7 +39,7 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: PrismaService,
-          useFactory: mockPrismaService,
+          useFactory: createMockPrismaService,
         },
         {
           provide: JwtService,
@@ -51,7 +49,7 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    prismaService = module.get(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
   });
 

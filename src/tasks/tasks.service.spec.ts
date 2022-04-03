@@ -2,22 +2,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Role } from '@prisma/client';
+
+import {
+  createMockPrismaService,
+  MockPrismaService,
+} from '../prisma/prisma.mock';
 import { PrismaService } from '../prisma/prisma.service';
 import { NOTIFICATION_SERVICE } from './constants';
 import { TasksService } from './tasks.service';
-
-const mockPrismaService = () => ({
-  task: {
-    create: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-  },
-  user: {
-    findMany: jest.fn(() => []),
-  },
-});
 
 const mockClient = () => ({
   emit: jest.fn(),
@@ -25,7 +17,7 @@ const mockClient = () => ({
 
 describe('TasksService', () => {
   let service: TasksService;
-  let prismaService: PrismaService;
+  let prismaService: MockPrismaService;
   let client: ClientProxy;
 
   const mockTask = {
@@ -54,7 +46,7 @@ describe('TasksService', () => {
         TasksService,
         {
           provide: PrismaService,
-          useFactory: mockPrismaService,
+          useFactory: createMockPrismaService,
         },
         {
           provide: NOTIFICATION_SERVICE,
@@ -64,7 +56,7 @@ describe('TasksService', () => {
     }).compile();
 
     service = module.get<TasksService>(TasksService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    prismaService = module.get(PrismaService);
     client = module.get<ClientProxy>(NOTIFICATION_SERVICE);
   });
 
@@ -242,6 +234,7 @@ describe('TasksService', () => {
       const performedAt = new Date();
 
       jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(mockTask);
+      prismaService.user.findMany.mockResolvedValue([]);
 
       const mockPerformTask = jest
         .spyOn(prismaService.task, 'update')
