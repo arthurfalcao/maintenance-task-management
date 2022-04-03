@@ -6,6 +6,8 @@ services:
     entrypoint: wait-for db_test:3306 -t 40 -- .docker/test/entrypoint.sh
     volumes:
       - .:/home/node/app
+    env_file:
+      - .env.test
     depends_on:
       - db_test
 
