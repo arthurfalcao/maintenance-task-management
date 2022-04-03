@@ -5,6 +5,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { userStub } from './stubs/user.stub';
+import { clearDatabase } from './helpers/clear-database.helper';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -22,14 +23,12 @@ describe('AuthController (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const deleteTask = prismaService.task.deleteMany();
-    const deleteUser = prismaService.user.deleteMany();
-
-    await prismaService.$transaction([deleteTask, deleteUser]);
+    await clearDatabase(prismaService);
   });
 
   afterAll(async () => {
     await prismaService.$disconnect();
+    await app.close();
   });
 
   describe('/auth/login (POST)', () => {
