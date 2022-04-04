@@ -7,8 +7,8 @@ import * as bcrypt from 'bcrypt';
 import {
   createMockPrismaService,
   MockPrismaService,
-} from '../prisma/prisma.mock';
-import { PrismaService } from '../prisma/prisma.service';
+} from '@/prisma/prisma.mock';
+import { PrismaService } from '@/prisma/prisma.service';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {

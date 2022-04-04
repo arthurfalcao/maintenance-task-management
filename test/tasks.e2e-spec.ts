@@ -5,8 +5,9 @@ import { Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import * as request from 'supertest';
 
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { AppModule } from '@/app.module';
+import { PrismaService } from '@/prisma/prisma.service';
+
 import { userStub } from './stubs/user.stub';
 import { taskStub } from './stubs/task.stub';
 import { clearDatabase } from './helpers/clear-database.helper';

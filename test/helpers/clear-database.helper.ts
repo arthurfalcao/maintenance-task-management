@@ -1,5 +1,5 @@
 import { PrismaPromise } from '@prisma/client';
-import { PrismaService } from '../../src/prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 
 export const clearDatabase = async (prisma: PrismaService) => {
   const transactions: PrismaPromise<unknown>[] = [];

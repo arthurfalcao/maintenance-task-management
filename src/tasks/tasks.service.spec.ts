@@ -6,8 +6,8 @@ import { Prisma, Role } from '@prisma/client';
 import {
   createMockPrismaService,
   MockPrismaService,
-} from '../prisma/prisma.mock';
-import { PrismaService } from '../prisma/prisma.service';
+} from '@/prisma/prisma.mock';
+import { PrismaService } from '@/prisma/prisma.service';
 import { NOTIFICATION_SERVICE } from './constants';
 import { TasksService } from './tasks.service';
 
@@ -248,6 +248,24 @@ describe('TasksService', () => {
       expect(mockPerformTask).toHaveBeenCalled();
       expect(result.performedAt).toEqual(performedAt);
     });
+
+    // it('should be able to perform a task with a custom date', async () => {
+    //   const performedAt = new Date();
+
+    //   jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(mockTask);
+
+    //   const mockPerformTask = jest
+    //     .spyOn(prismaService.task, 'update')
+    //     .mockResolvedValue({
+    //       ...mockTask,
+    //       performedAt,
+    //     });
+
+    //   const result = await service.performTask('someId', {});
+
+    //   expect(mockPerformTask).toHaveBeenCalled();
+    //   expect(result.performedAt).toEqual(performedAt);
+    // });
 
     it('should throw a not found error if the task does not exist', async () => {
       jest.spyOn(prismaService.task, 'findUnique').mockResolvedValue(null);
