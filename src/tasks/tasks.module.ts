@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 
+import { EnvVariable, EnvVariables } from '@/common/env.validation';
+
 import { NOTIFICATION_SERVICE } from './constants';
 import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
@@ -11,11 +13,13 @@ import { TasksController } from './tasks.controller';
     ClientsModule.registerAsync([
       {
         name: NOTIFICATION_SERVICE,
-        useFactory: async (configService: ConfigService) => ({
+        useFactory: async (
+          configService: ConfigService<EnvVariables, true>,
+        ) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [configService.get<string>('QUEUE_URL')!],
-            queue: configService.get('QUEUE_NAME'),
+            urls: [configService.get<string>(EnvVariable.QUEUE_URL)],
+            queue: configService.get(EnvVariable.QUEUE_NAME),
             queueOptions: { durable: false },
           },
         }),
