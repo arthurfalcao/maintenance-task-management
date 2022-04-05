@@ -10,6 +10,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role, User } from '@prisma/client';
 
 import { Auth } from '@/auth/decorators/auth.decorator';
@@ -19,6 +20,8 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
 
+@ApiBearerAuth()
+@ApiTags('tasks')
 @Controller('tasks')
 @Auth()
 export class TasksController {

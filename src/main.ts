@@ -1,10 +1,25 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { RmqOptions, Transport } from '@nestjs/microservices';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
+import { description, version } from '../package.json';
+
 import { AppModule } from './app.module';
 import { EnvVariable, EnvVariables } from './common/env.validation';
 import { PrismaService } from './prisma/prisma.service';
+
+function setupSwagger(app: INestApplication) {
+  const config = new DocumentBuilder()
+    .setTitle('Maintenance Task Management API')
+    .setDescription(description)
+    .setVersion(version)
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+}
 
 async function bootstrap() {
   const logger = new Logger();
@@ -16,7 +31,10 @@ async function bootstrap() {
 
   prismaService.enableShutdownHooks(app);
 
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
+
+  setupSwagger(app);
 
   app.connectMicroservice<RmqOptions>({
     transport: Transport.RMQ,
