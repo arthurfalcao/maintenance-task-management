@@ -7,6 +7,7 @@ import * as request from 'supertest';
 
 import { AppModule } from '@/app.module';
 import { PrismaService } from '@/prisma/prisma.service';
+import { TasksService } from '@/tasks/tasks.service';
 
 import { userStub } from './stubs/user.stub';
 import { taskStub } from './stubs/task.stub';
@@ -16,6 +17,7 @@ describe('TasksController (e2e)', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let jwtService: JwtService;
+  let tasksService: TasksService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -26,6 +28,7 @@ describe('TasksController (e2e)', () => {
     await app.init();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
+    tasksService = moduleFixture.get<TasksService>(TasksService);
     jwtService = moduleFixture.get<JwtService>(JwtService);
   });
 
@@ -165,7 +168,7 @@ describe('TasksController (e2e)', () => {
   describe('/tasks/:id (PUT)', () => {
     it('should return unauthorized if unauthenticated', () => {
       return request(app.getHttpServer())
-        .put(`/tasks/${randomUUID()}}`)
+        .put(`/tasks/${randomUUID()}`)
         .expect(401);
     });
 
@@ -264,6 +267,71 @@ describe('TasksController (e2e)', () => {
         .set('Authorization', `Bearer ${accessToken}`)
         .send(taskStub())
         .expect(404);
+    });
+  });
+
+  describe('/tasks/:id/perform (PATCH)', () => {
+    it('should return unauthorized if unauthenticated', () => {
+      return request(app.getHttpServer())
+        .patch(`/tasks/${randomUUID()}/perform`)
+        .expect(401);
+    });
+
+    it('should perform a task', async () => {
+      const user = await prismaService.user.create({
+        data: userStub({
+          tasks: {
+            create: taskStub(),
+          },
+        }),
+        include: { tasks: true },
+      });
+
+      const accessToken = jwtService.sign({
+        email: user.email,
+        role: user.role,
+      });
+
+      return request(app.getHttpServer())
+        .patch(`/tasks/${user.tasks[0].id}/perform`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.performedAt).toBeDefined();
+        });
+    });
+
+    it('should not update the task when unable to notify managers', async () => {
+      const user = await prismaService.user.create({
+        data: userStub({
+          tasks: {
+            create: taskStub(),
+          },
+        }),
+        include: { tasks: true },
+      });
+
+      const taskId = user.tasks[0].id;
+
+      const accessToken = jwtService.sign({
+        email: user.email,
+        role: user.role,
+      });
+
+      jest
+        .spyOn(tasksService, 'notifyToManagers')
+        .mockRejectedValue(new Error());
+
+      await request(app.getHttpServer())
+        .patch(`/tasks/${taskId}/perform`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(500);
+
+      const task = await prismaService.task.findUnique({
+        where: { id: taskId },
+      });
+
+      expect(task?.performedAt).toBeNull();
     });
   });
 });

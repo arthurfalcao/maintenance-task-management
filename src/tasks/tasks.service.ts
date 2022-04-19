@@ -82,14 +82,16 @@ export class TasksService {
       throw new BadRequestException(`Task '${id}' already performed`);
     }
 
-    const updatedTask = await this.prismaService.task.update({
-      where: { id },
-      data: { performedAt: new Date() },
+    return this.prismaService.$transaction(async (prisma) => {
+      const updatedTask = await prisma.task.update({
+        where: { id },
+        data: { performedAt: new Date() },
+      });
+
+      await this.notifyToManagers(updatedTask);
+
+      return updatedTask;
     });
-
-    await this.notifyToManagers(updatedTask);
-
-    return updatedTask;
   }
 
   async notifyToManagers(task: Task) {
